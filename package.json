@@ -17,5 +17,10 @@
   "bugs": {
     "url": "https://github.com/Luiss1569/Jogo-da-velha-Server/issues"
   },
-  "homepage": "https://github.com/Luiss1569/Jogo-da-velha-Server#readme"
+  "homepage": "https://github.com/Luiss1569/Jogo-da-velha-Server#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
 }
