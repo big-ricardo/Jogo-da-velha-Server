@@ -17,4 +17,9 @@ router.get('/ingame', (req, res) => {
     res.json(resp)
 });
 
+router.get('/play', (req, res) => {
+    const resp = creategame.playAttempt({playerid: "123", gameid: "123", position:{i:0, j:0}})
+    res.json(resp)
+});
+
 module.exports = router;
