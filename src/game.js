@@ -32,7 +32,7 @@ module.exports = {
             return state.rooms[gameid]
         }
 
-        function playAttempt(command)){
+        function playAttempt(command){
 
         }
 
