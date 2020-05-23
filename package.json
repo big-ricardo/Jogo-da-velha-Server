@@ -1,0 +1,21 @@
+{
+  "name": "Jogo-da-velha-Server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luiss1569/Jogo-da-velha-Server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Luiss1569/Jogo-da-velha-Server/issues"
+  },
+  "homepage": "https://github.com/Luiss1569/Jogo-da-velha-Server#readme"
+}
