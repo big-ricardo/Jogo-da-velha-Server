@@ -25,12 +25,13 @@ module.exports = {
 
         function addNewPlayer(command) {
             const playerid = command.socketid
-            let matriz = [[0, 2, 1], [0, 2, 2], [1, 0, 2]]
+            let matrix = [[0, 2, 1], [0, 2, 2], [1, 0, 2]]
             state.rooms[playerid] = {
                 id: playerid,
-                game: matriz,
+                game: matrix,
                 players: {},
                 parts: {},
+                pontuacao:{1:0, 2:0, 3:0},
                 playerTime: null
             }
             state.rooms[playerid].players[playerid] = 1
@@ -76,10 +77,14 @@ module.exports = {
             let _gameid 
 
             for (let [gameid, room] of Object.entries(rooms)) {
+                const numberPlayers = Object.keys(room.players).length
                 if (room.players[playerid]) {
                     delete state.rooms[gameid].parts[room.players[playerid]]
                     delete state.rooms[gameid].players[playerid]
                     _gameid = gameid
+                    if(numberPlayers == 0){
+                        delete state.rooms[gameid]
+                    }
                 }
             }
 
@@ -99,7 +104,7 @@ module.exports = {
 
             if (state.rooms[gameid].game[i][j] == 0 && state.rooms[gameid].players[playerid] == state.rooms[gameid].playerTime) {
                 state.rooms[gameid].game[i][j] = part
-                const newGame = testsGame({ gameid, part })
+                const newGame = testsGame({ gameid, part, playerid })
 
                 if(state.rooms[gameid].playerTime == 1){
                     state.rooms[gameid].playerTime  = 2
@@ -111,13 +116,34 @@ module.exports = {
                     type: 'attempt',
                     players: state.rooms[gameid].parts,
                     newGame,
-                    playerTime: state.rooms[gameid].playerTime
+                    playerTime: state.rooms[gameid].playerTime,
+                    pontuacao: state.rooms[gameid.pontuacao]
                 })
 
                 return {newGame, playertime: state.rooms[gameid].playerTime}
             } else {
                 return { error: 'Fail' }
             }
+        }
+
+        function resetGame(command){
+            const gameid = command.gameid
+
+            if(state.rooms[gameid].playerTime == 0){
+                state.rooms[gameid].game = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+                let n = Math.floor(Math.random() * 10)
+                if(n > 5){
+                    state.rooms[gameid].playerTime = 1
+                }else{
+                    state.rooms[gameid].playerTime = 2
+                }
+            }
+
+            notifyAll({
+                type:'reset',
+                newGame:  {game:state.rooms[gameid].game},
+                playerTime: state.rooms[gameid].playerTime
+            })
         }
 
         function testsGame(command) {
@@ -128,10 +154,14 @@ module.exports = {
 
             if (game[0].indexOf(0) == -1 && game[1].indexOf(0) == -1 && game[2].indexOf(0) == -1) {
                 situation.push({ winner: false, type: 'old' })
+                state.rooms[gameid].pontuacao[3] += 1 
+                state.rooms[gameid].playerTime = 0
             } else {
                 const result = testsWinner({ part, game })
                 if (result.modes > 0) {
                     situation = result.situation
+                    state.rooms[gameid].pontuacao[state.rooms[gameid].players[command.playerid]] += 1 
+                    state.rooms[gameid].playerTime = 0
                 } else {
                     situation.push({ winner: false, type: 'continue' })
                 }
@@ -172,7 +202,8 @@ module.exports = {
             playAttempt,
             removePlayer,
             subscribe,
-            getRoom
+            getRoom,
+            resetGame
         }
     }
 

@@ -45,6 +45,11 @@ sockets.on('connection', (socket) => {
         game.playAttempt(command)
     })
 
+    socket.on('reset', (command)=>{
+        command.type = 'move'
+        game.resetGame(command)
+    })
+
 })
 
 app.use((req, res, next) => {
