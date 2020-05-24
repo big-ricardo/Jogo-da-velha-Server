@@ -5,12 +5,10 @@ const socketio = require('socket.io')
 const cors = require('cors')
 const create = require('./game')
 
-
 const app = express()
 const server = http.createServer(app)
 const sockets = socketio(server)
 
-app.use(express.static('public'))
 app.use(express.json())
 app.use(cors())
 

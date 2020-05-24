@@ -73,17 +73,19 @@ module.exports = {
         function removePlayer(command) {
             const playerid = command.playerid
             const rooms = state.rooms
+            let _gameid 
 
             for (let [gameid, room] of Object.entries(rooms)) {
                 if (room.players[playerid]) {
                     delete state.rooms[gameid].parts[room.players[playerid]]
                     delete state.rooms[gameid].players[playerid]
+                    _gameid = gameid
                 }
             }
 
             notifyAll({
                 type: 'remove-player',
-                players: state.rooms[gameid].parts
+                players: state.rooms[_gameid].parts
             })
 
             return state.rooms
@@ -99,13 +101,20 @@ module.exports = {
                 state.rooms[gameid].game[i][j] = part
                 const newGame = testsGame({ gameid, part })
 
+                if(state.rooms[gameid].playerTime == 1){
+                    state.rooms[gameid].playerTime  = 2
+                }else{
+                    state.rooms[gameid].playerTime = 1
+                }
+
                 notifyAll({
                     type: 'attempt',
                     players: state.rooms[gameid].parts,
-                    newGame
+                    newGame,
+                    playerTime: state.rooms[gameid].playerTime
                 })
 
-                return newGame
+                return {newGame, playertime: state.rooms[gameid].playerTime}
             } else {
                 return { error: 'Fail' }
             }
