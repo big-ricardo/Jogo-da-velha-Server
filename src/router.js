@@ -27,4 +27,9 @@ router.get('/remove', (req, res) => {
     res.json(resp)
 });
 
+router.get('/reset', (req, res) => {
+    const resp = creategame.resetGame({ gameid: "123" })
+    res.json(resp)
+});
+
 module.exports = router;

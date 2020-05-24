@@ -23,9 +23,9 @@ game.subscribe((command) => {
 sockets.on('connection', (socket) => {
     const playerid = socket.id
     const { gameid } = socket.handshake.query
-    console.log(`> Player connected: ${playerId}`)
+    console.log(`> Player connected: ${playerid}`)
 
-    if (gameid) {
+    if (gameid != 0) {
         game.addPlayerInGame({ socketid: playerid, gameid })
         socket.emit('setup', game.getRoom({ gameid }))
     } else {
@@ -35,18 +35,20 @@ sockets.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         game.removePlayer({ playerid })
-        console.log(`> Player disconnected: ${playerId}`)
+        console.log(`> Player disconnected: ${playerid}`)
     })
 
     socket.on('move', (command) => {
         command.playerid = playerid
         command.type = 'move'
-
+        if(command.gameid == 0){
+            command.gameid = playerid
+        }
         game.playAttempt(command)
     })
 
     socket.on('reset', (command)=>{
-        command.type = 'move'
+        command.type = 'reset'
         game.resetGame(command)
     })
 
@@ -60,6 +62,6 @@ app.use((req, res, next) => {
 
 app.use(router)
 
-server.listen(3000, () => {
-    console.log(`> Server listening on port: 3000`)
+server.listen(3333, () => {
+    console.log(`> Server listening on port: 3333`)
 })
