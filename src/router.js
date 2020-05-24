@@ -8,17 +8,22 @@ router.get('/', (req, res) => {
 });
 
 router.get('/new', (req, res) => {
-    const resp = creategame.addNewPlayer({socketid: "123"})
+    const resp = creategame.addNewPlayer({ socketid: "123" })
     res.json(resp)
 });
 
 router.get('/ingame', (req, res) => {
-    const resp = creategame.addPlayerInGame({socketid: "321", gameid: "123"})
+    const resp = creategame.addPlayerInGame({ socketid: "321", gameid: "123" })
     res.json(resp)
 });
 
 router.get('/play', (req, res) => {
-    const resp = creategame.playAttempt({playerid: "123", gameid: "123", position:{i:0, j:0}})
+    const resp = creategame.playAttempt({ playerid: "123", gameid: "123", position: { i: 0, j: 0 } })
+    res.json(resp)
+});
+
+router.get('/remove', (req, res) => {
+    const resp = creategame.removePlayer({ playerid: "123" })
     res.json(resp)
 });
 

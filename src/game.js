@@ -7,6 +7,22 @@ module.exports = {
             }
         }
 
+        const observers = []
+
+        function subscribe(observerFunction) {
+            observers.push(observerFunction)
+        }
+
+        function notifyAll(command) {
+            for (const observerFunction of observers) {
+                observerFunction(command)
+            }
+        }
+
+        function getRoom(command) {
+            return state.rooms[command.gameid]
+        }
+
         function addNewPlayer(command) {
             const playerid = command.socketid
             let matriz = [[0, 2, 1], [0, 2, 2], [1, 0, 2]]
@@ -44,6 +60,13 @@ module.exports = {
                 }
             }
 
+            notifyAll({
+                type: 'add-player',
+                playerTime: state.rooms[gameid].playerTime,
+                game: state.rooms[gameid].game,
+                players: state.rooms[gameid].parts
+            })
+
             return state.rooms[gameid]
         }
 
@@ -51,11 +74,19 @@ module.exports = {
             const playerid = command.playerid
             const rooms = state.rooms
 
-            for (var [gameid, room] of Object.entries(rooms)) {
-                if(room.players[playerid]){
+            for (let [gameid, room] of Object.entries(rooms)) {
+                if (room.players[playerid]) {
+                    delete state.rooms[gameid].parts[room.players[playerid]]
                     delete state.rooms[gameid].players[playerid]
                 }
             }
+
+            notifyAll({
+                type: 'remove-player',
+                players: state.rooms[gameid].parts
+            })
+
+            return state.rooms
         }
 
         function playAttempt(command) {
@@ -64,12 +95,19 @@ module.exports = {
             const { i, j } = command.position
             const part = state.rooms[gameid].players[playerid]
 
-            if (state.rooms[gameid].game[i][j] == 0 &&  state.rooms[gameid].players[playerid] == state.rooms[gameid].playerTime) {
+            if (state.rooms[gameid].game[i][j] == 0 && state.rooms[gameid].players[playerid] == state.rooms[gameid].playerTime) {
                 state.rooms[gameid].game[i][j] = part
                 const newGame = testsGame({ gameid, part })
+
+                notifyAll({
+                    type: 'attempt',
+                    players: state.rooms[gameid].parts,
+                    newGame
+                })
+
                 return newGame
             } else {
-                return { error: 'Fail'}
+                return { error: 'Fail' }
             }
         }
 
@@ -122,7 +160,10 @@ module.exports = {
         return {
             addNewPlayer,
             addPlayerInGame,
-            playAttempt
+            playAttempt,
+            removePlayer,
+            subscribe,
+            getRoom
         }
     }
 
