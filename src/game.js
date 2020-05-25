@@ -25,14 +25,14 @@ module.exports = {
 
         function addNewPlayer(command) {
             const playerid = command.socketid
-            let matrix = [[0, 1, 1], [0, 2, 2], [1, 0, 2]]
+            let matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
             state.rooms[playerid] = {
                 id: playerid,
                 game: matrix,
                 players: {},
                 parts: {},
                 pontuacao: { 1: 0, 2: 0, 3: 0 },
-                playerTime: null
+                playerTime: 1
             }
             state.rooms[playerid].players[playerid] = 1
             state.rooms[playerid].parts[1] = playerid
@@ -60,7 +60,7 @@ module.exports = {
                     }
                 }
             }
-
+            console.log(state.rooms[gameid].parts);
             notifyAll({
                 type: 'add-player',
                 playerTime: state.rooms[gameid].playerTime,
@@ -113,18 +113,18 @@ module.exports = {
                         state.rooms[gameid].playerTime = 1
                     }
                 }
-
                 notifyAll({
                     type: 'attempt',
                     players: state.rooms[gameid].parts,
                     game,
                     situation,
                     playerTime: state.rooms[gameid].playerTime,
-                    pontuacao: state.rooms[gameid.pontuacao]
+                    pontuacao: state.rooms[gameid].pontuacao
                 })
 
                 return {
-                    newGame,
+                    game,
+                    situation,
                     playerTime: state.rooms[gameid].playerTime,
                     pontuacao: state.rooms[gameid].pontuacao
                 }
