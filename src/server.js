@@ -23,7 +23,6 @@ game.subscribe((command) => {
 sockets.on('connection', (socket) => {
     const playerid = socket.id
     const { gameid } = socket.handshake.query
-    console.log(gameid);
     if (gameid !== 'false') {
         game.addPlayerInGame({ socketid: playerid, gameid })
         socket.emit('setup', game.getRoom({ gameid }))
@@ -57,12 +56,12 @@ sockets.on('connection', (socket) => {
 
 app.use((req, res, next) => {
     req.io = sockets;
-
+    req.game = game
     return next()
 })
 
 app.use(router)
 
-server.listen(3333, () => {
+server.listen(process.env.PORT || 3333, () => {
     console.log(`> Server listening on port: 3333`)
 })

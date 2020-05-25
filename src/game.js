@@ -20,7 +20,13 @@ module.exports = {
         }
 
         function getRoom(command) {
-            return state.rooms[command.gameid || command.playerid]
+            if(state.rooms[command.gameid || command.playerid]){
+                return state.rooms[command.gameid || command.playerid]
+            }else{
+                return {
+                    error: true,
+                }
+            }
         }
 
         function addNewPlayer(command) {
@@ -32,7 +38,7 @@ module.exports = {
                 players: {},
                 parts: {},
                 pontuacao: { 1: 0, 2: 0, 3: 0 },
-                playerTime: 1
+                playerTime: 0
             }
             state.rooms[playerid].players[playerid] = 1
             state.rooms[playerid].parts[1] = playerid
@@ -60,7 +66,6 @@ module.exports = {
                     }
                 }
             }
-            console.log(state.rooms[gameid].parts);
             notifyAll({
                 type: 'add-player',
                 playerTime: state.rooms[gameid].playerTime,
@@ -84,13 +89,16 @@ module.exports = {
                     _gameid = gameid
                     if (numberPlayers == 0) {
                         delete state.rooms[gameid]
+                    }else{
+                        state.rooms[gameid].playerTime = 0
                     }
                 }
             }
 
             notifyAll({
                 type: 'remove-player',
-                players: state.rooms[_gameid].parts
+                players: state.rooms[_gameid].parts,
+                playerTime: state.rooms[_gameid].playerTime
             })
 
             return state.rooms
@@ -106,7 +114,7 @@ module.exports = {
                 state.rooms[gameid].game[i][j] = part
                 const {game, situation} = testsGame({ gameid, part, playerid })
 
-                if (state.rooms[gameid].playerTime != 0) {
+                if (state.rooms[gameid].playerTime != 0 && state.rooms[gameid].playerTime != 3) {
                     if (state.rooms[gameid].playerTime == 1) {
                         state.rooms[gameid].playerTime = 2
                     } else {
@@ -135,9 +143,10 @@ module.exports = {
 
         function resetGame(command) {
             const gameid = command.gameid
+            let matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
-            if (state.rooms[gameid].playerTime == 0) {
-                state.rooms[gameid].game = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+            if (state.rooms[gameid].playerTime == 3) {
+                state.rooms[gameid].game = matrix
                 let n = Math.floor(Math.random() * 10)
                 if (n > 5) {
                     state.rooms[gameid].playerTime = 1
@@ -147,9 +156,10 @@ module.exports = {
             }
 
             notifyAll({
-                type: 'reset',
-                newGame: { game: state.rooms[gameid].game },
-                playerTime: state.rooms[gameid].playerTime
+                type: 'reset-game',
+                game: state.rooms[gameid].game ,
+                playerTime: state.rooms[gameid].playerTime,
+                players: state.rooms[gameid].parts
             })
 
             return {
@@ -167,13 +177,13 @@ module.exports = {
             if (game[0].indexOf(0) == -1 && game[1].indexOf(0) == -1 && game[2].indexOf(0) == -1) {
                 situation.push({ winner: false, type: 'old' })
                 state.rooms[gameid].pontuacao[3] += 1
-                state.rooms[gameid].playerTime = 0
+                state.rooms[gameid].playerTime = 3
             } else {
                 const result = testsWinner({ part, game })
                 if (result.modes > 0) {
                     situation = result.situation
                     state.rooms[gameid].pontuacao[state.rooms[gameid].players[command.playerid]] += 1
-                    state.rooms[gameid].playerTime = 0
+                    state.rooms[gameid].playerTime = 3
                 } else {
                     situation.push({ winner: false, type: 'continue' })
                 }
