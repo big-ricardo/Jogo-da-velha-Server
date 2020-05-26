@@ -173,6 +173,7 @@ module.exports = {
 
         function testsGame(command) {
             const gameid = command.gameid
+            
             const game = state.rooms[gameid].game
             const part = command.part
             let situation = []
