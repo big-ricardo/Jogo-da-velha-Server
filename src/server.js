@@ -23,10 +23,14 @@ game.subscribe((command) => {
 sockets.on('connection', (socket) => {
     const playerid = socket.id
     const { gameid } = socket.handshake.query
-    if (gameid !== 'false') {
+    if (!game.getRoom({game}).error) {
         game.addPlayerInGame({ socketid: playerid, gameid })
         socket.emit('setup', game.getRoom({ gameid }))
         console.log(`> Player connected in room ${gameid}: ${playerid}`)
+    }else{
+        game.addNewPlayer({gameid})
+        game.addPlayerInGame({ socketid: playerid, gameid })
+        socket.emit('setup', game.getRoom({ gameid }))
     }
 
     socket.on('disconnect', () => {
