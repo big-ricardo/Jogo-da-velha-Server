@@ -23,7 +23,7 @@ module.exports = {
             if (state.rooms[command.gameid || command.playerid]) {
                 return state.rooms[command.gameid || command.playerid]
             } else {
-
+                return {error: true}
             }
         }
 
