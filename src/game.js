@@ -162,8 +162,7 @@ module.exports = {
                 type: 'reset-game',
                 game: state.rooms[gameid].game,
                 playerTime: state.rooms[gameid].playerTime,
-                players: state.rooms[gameid].parts,
-                player
+                players: state.rooms[gameid].parts
             })
 
             return {
@@ -177,27 +176,23 @@ module.exports = {
             const game = state.rooms[gameid].game
             const part = command.part
             let situation = []
-            let player = 0
 
             if (game[0].indexOf(0) == -1 && game[1].indexOf(0) == -1 && game[2].indexOf(0) == -1) {
                 situation.push({ winner: false, type: 'old'  })
                 state.rooms[gameid].pontuacao[3] += 1
-                player = 3
                 state.rooms[gameid].playerTime = 3
             } else {
                 const result = testsWinner({ part, game })
                 if (result.modes > 0) {
                     situation = result.situation
                     state.rooms[gameid].pontuacao[state.rooms[gameid].players[command.playerid]] += 1
-                    player = state.rooms[gameid].playerTime 
                     state.rooms[gameid].playerTime = 3
                 } else {
                     situation.push({ winner: false, type: 'continue' })
-                    player = 0
                 }
             }
 
-            return { situation, game, player }
+            return { situation, game }
         }
 
         function testsWinner({ part, game }) {
