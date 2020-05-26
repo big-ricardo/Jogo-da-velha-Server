@@ -23,11 +23,11 @@ module.exports = {
             if (state.rooms[command.gameid || command.playerid]) {
                 return state.rooms[command.gameid || command.playerid]
             } else {
-                return {error: true}
+                return { error: true }
             }
         }
 
-        function getNumRooms(){
+        function getNumRooms() {
             return Object.keys(state.rooms).length
         }
 
@@ -92,10 +92,10 @@ module.exports = {
                     delete state.rooms[gameid].parts[room.players[playerid]]
                     delete state.rooms[gameid].players[playerid]
                     const numberPlayers = Object.keys(room.players).length
-    
+
                     if (numberPlayers == 0) {
                         delete state.rooms[gameid]
-                        console.log("> Delete room "+ gameid);
+                        console.log("> Delete room " + gameid);
                     } else {
                         state.rooms[gameid].playerTime = 0
                         notifyAll({
@@ -177,25 +177,26 @@ module.exports = {
 
         function testsGame(command) {
             const gameid = command.gameid
-            
+
             const game = state.rooms[gameid].game
             const part = command.part
             let situation = []
 
-            if (game[0].indexOf(0) == -1 && game[1].indexOf(0) == -1 && game[2].indexOf(0) == -1) {
-                situation.push({ winner: false, type: 'old'  })
-                state.rooms[gameid].pontuacao[3] += 1
+            const result = testsWinner({ part, game })
+            if (result.modes > 0) {
+                situation = result.situation
+                state.rooms[gameid].pontuacao[state.rooms[gameid].players[command.playerid]] += 1
                 state.rooms[gameid].playerTime = 3
             } else {
-                const result = testsWinner({ part, game })
-                if (result.modes > 0) {
-                    situation = result.situation
-                    state.rooms[gameid].pontuacao[state.rooms[gameid].players[command.playerid]] += 1
+                if (game[0].indexOf(0) == -1 && game[1].indexOf(0) == -1 && game[2].indexOf(0) == -1) {
+                    situation.push({ winner: false, type: 'old' })
+                    state.rooms[gameid].pontuacao[3] += 1
                     state.rooms[gameid].playerTime = 3
                 } else {
                     situation.push({ winner: false, type: 'continue' })
                 }
             }
+
 
             return { situation, game }
         }
