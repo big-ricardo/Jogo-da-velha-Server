@@ -27,10 +27,6 @@ sockets.on('connection', (socket) => {
         game.addPlayerInGame({ socketid: playerid, gameid })
         socket.emit('setup', game.getRoom({ gameid }))
         console.log(`> Player connected in room ${gameid}: ${playerid}`)
-    } else {
-        game.addNewPlayer({ socketid: playerid })
-        socket.emit('setup', game.getRoom({ playerid }))
-        console.log(`> Player connected in new room: ${playerid}`)
     }
 
     socket.on('disconnect', () => {

@@ -20,30 +20,26 @@ module.exports = {
         }
 
         function getRoom(command) {
-            if(state.rooms[command.gameid || command.playerid]){
+            if (state.rooms[command.gameid || command.playerid]) {
                 return state.rooms[command.gameid || command.playerid]
-            }else{
-                return {
-                    error: true,
-                }
+            } else {
+
             }
         }
 
         function addNewPlayer(command) {
-            const playerid = command.socketid
+            const gameid = command.gameid
             let matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-            state.rooms[playerid] = {
-                id: playerid,
+            state.rooms[gameid] = {
                 game: matrix,
                 players: {},
                 parts: {},
                 pontuacao: { 1: 0, 2: 0, 3: 0 },
                 playerTime: 0
             }
-            state.rooms[playerid].players[playerid] = 1
-            state.rooms[playerid].parts[1] = playerid
+            console.log("> New room  " + gameid);
 
-            return state.rooms[playerid]
+            return state.rooms[gameid]
         }
 
         function addPlayerInGame(command) {
@@ -53,19 +49,26 @@ module.exports = {
             const numberPlayers = Object.keys(players).length
             const parts = state.rooms[gameid].parts
 
-            if (numberPlayers == 1) {
-                if (parts[2] == null) {
-                    state.rooms[gameid].players[playerid] = 2
-                    state.rooms[gameid].parts[2] = playerid
-                    state.rooms[gameid].playerTime = 1
-                } else {
+            if (numberPlayers == 0) {
+                state.rooms[gameid].players[playerid] = 1
+                state.rooms[gameid].parts[1] = playerid
+                state.rooms[gameid].playerTime = 0
+            } else {
+                if (numberPlayers == 1) {
                     if (parts[1] == null) {
                         state.rooms[gameid].players[playerid] = 1
                         state.rooms[gameid].parts[1] = playerid
-                        state.rooms[gameid].playerTime = 2
+                        state.rooms[gameid].playerTime = 1
+                    } else {
+                        if (parts[2] == null) {
+                            state.rooms[gameid].players[playerid] = 2
+                            state.rooms[gameid].parts[2] = playerid
+                            state.rooms[gameid].playerTime = 2
+                        }
                     }
                 }
             }
+
             notifyAll({
                 type: 'add-player',
                 playerTime: state.rooms[gameid].playerTime,
@@ -79,27 +82,27 @@ module.exports = {
         function removePlayer(command) {
             const playerid = command.playerid
             const rooms = state.rooms
-            let _gameid
 
             for (let [gameid, room] of Object.entries(rooms)) {
-                const numberPlayers = Object.keys(room.players).length
                 if (room.players[playerid]) {
                     delete state.rooms[gameid].parts[room.players[playerid]]
                     delete state.rooms[gameid].players[playerid]
-                    _gameid = gameid
+                    const numberPlayers = Object.keys(room.players).length
+    
                     if (numberPlayers == 0) {
                         delete state.rooms[gameid]
-                    }else{
+                        console.log("> Delete room "+ gameid);
+                    } else {
                         state.rooms[gameid].playerTime = 0
+                        notifyAll({
+                            type: 'remove-player',
+                            players: state.rooms[gameid].parts,
+                            playerTime: state.rooms[gameid].playerTime
+                        })
                     }
                 }
             }
 
-            notifyAll({
-                type: 'remove-player',
-                players: state.rooms[_gameid].parts,
-                playerTime: state.rooms[_gameid].playerTime
-            })
 
             return state.rooms
         }
@@ -112,7 +115,7 @@ module.exports = {
 
             if (state.rooms[gameid].game[i][j] == 0 && state.rooms[gameid].players[playerid] == state.rooms[gameid].playerTime) {
                 state.rooms[gameid].game[i][j] = part
-                const {game, situation} = testsGame({ gameid, part, playerid })
+                const { game, situation } = testsGame({ gameid, part, playerid })
 
                 if (state.rooms[gameid].playerTime != 0 && state.rooms[gameid].playerTime != 3) {
                     if (state.rooms[gameid].playerTime == 1) {
@@ -157,9 +160,10 @@ module.exports = {
 
             notifyAll({
                 type: 'reset-game',
-                game: state.rooms[gameid].game ,
+                game: state.rooms[gameid].game,
                 playerTime: state.rooms[gameid].playerTime,
-                players: state.rooms[gameid].parts
+                players: state.rooms[gameid].parts,
+                player
             })
 
             return {
@@ -173,23 +177,27 @@ module.exports = {
             const game = state.rooms[gameid].game
             const part = command.part
             let situation = []
+            let player = 0
 
             if (game[0].indexOf(0) == -1 && game[1].indexOf(0) == -1 && game[2].indexOf(0) == -1) {
-                situation.push({ winner: false, type: 'old' })
+                situation.push({ winner: false, type: 'old'  })
                 state.rooms[gameid].pontuacao[3] += 1
+                player = 3
                 state.rooms[gameid].playerTime = 3
             } else {
                 const result = testsWinner({ part, game })
                 if (result.modes > 0) {
                     situation = result.situation
                     state.rooms[gameid].pontuacao[state.rooms[gameid].players[command.playerid]] += 1
+                    player = state.rooms[gameid].playerTime 
                     state.rooms[gameid].playerTime = 3
                 } else {
                     situation.push({ winner: false, type: 'continue' })
+                    player = 0
                 }
             }
 
-            return { situation, game }
+            return { situation, game, player }
         }
 
         function testsWinner({ part, game }) {
@@ -213,7 +221,7 @@ module.exports = {
 
             return {
                 situation,
-                modes: situation.length
+                modes: situation.length,
             }
 
         }
