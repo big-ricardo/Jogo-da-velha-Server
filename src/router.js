@@ -3,7 +3,10 @@ const router = express.Router();
 const crypto = require('crypto')
 
 router.get('/', (req, res) => {
-    return res.json({ message: `Muito Bem!Tudo funcionando!!!` });
+    return res.json({
+        message: `Muito Bem!Tudo funcionando!!!`,
+        rooms_online: req.game.getNumRooms()
+    });
 });
 
 router.get('/room', (req, res) => {

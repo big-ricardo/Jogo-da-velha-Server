@@ -27,6 +27,10 @@ module.exports = {
             }
         }
 
+        function getNumRooms(){
+            return Object.keys(state.rooms).length
+        }
+
         function addNewPlayer(command) {
             const gameid = command.gameid
             let matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -229,7 +233,8 @@ module.exports = {
             removePlayer,
             subscribe,
             getRoom,
-            resetGame
+            resetGame,
+            getNumRooms
         }
     }
 
