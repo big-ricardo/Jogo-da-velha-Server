@@ -1,3 +1,4 @@
+const minimax = require('./bot')
 module.exports = {
 
     world() {
@@ -6,7 +7,7 @@ module.exports = {
             rooms: {
             }
         }
-
+        const bot = minimax.bot()
         const observers = []
 
         function subscribe(observerFunction) {
@@ -39,7 +40,8 @@ module.exports = {
                 players: {},
                 parts: {},
                 pontuacao: { 1: 0, 2: 0, 3: 0 },
-                playerTime: 0
+                playerTime: 0,
+                bot: false
             }
             console.log("> New room  " + gameid);
 
@@ -52,7 +54,21 @@ module.exports = {
             const players = state.rooms[gameid].players
             const numberPlayers = Object.keys(players).length
             const parts = state.rooms[gameid].parts
-
+            
+            if(playerid == 'bot'){
+                state.rooms[gameid].bot = true
+                state.rooms[gameid].pontuacao = { 1: 0, 2: 0, 3: 0 }
+                resetGame({gameid})
+            }else{
+                if(state.rooms[gameid].bot){
+                    state.rooms[gameid].pontuacao = { 1: 0, 2: 0, 3: 0 }
+                    resetGame({gameid})
+                    removePlayer({playerid: "bot"})
+                    state.rooms[gameid].bot = false
+                    addPlayerInGame({socketid:playerid,gameid})
+                }
+            }
+            
             if (numberPlayers == 0) {
                 state.rooms[gameid].players[playerid] = 1
                 state.rooms[gameid].parts[1] = playerid
@@ -62,24 +78,24 @@ module.exports = {
                     if (parts[1] == null) {
                         state.rooms[gameid].players[playerid] = 1
                         state.rooms[gameid].parts[1] = playerid
-                        state.rooms[gameid].playerTime = 1
+                        state.rooms[gameid].playerTime = 2
                     } else {
                         if (parts[2] == null) {
                             state.rooms[gameid].players[playerid] = 2
                             state.rooms[gameid].parts[2] = playerid
-                            state.rooms[gameid].playerTime = 2
+                            state.rooms[gameid].playerTime = 1
                         }
                     }
                 }
             }
-
+            
             notifyAll({
                 type: 'add-player',
                 playerTime: state.rooms[gameid].playerTime,
                 game: state.rooms[gameid].game,
                 players: state.rooms[gameid].parts
             })
-
+           
             return state.rooms[gameid]
         }
 
@@ -91,6 +107,8 @@ module.exports = {
                 if (room.players[playerid]) {
                     delete state.rooms[gameid].parts[room.players[playerid]]
                     delete state.rooms[gameid].players[playerid]
+                    delete state.rooms[gameid].parts[room.players['bot']]
+                    delete state.rooms[gameid].players['bot']
                     const numberPlayers = Object.keys(room.players).length
 
                     if (numberPlayers == 0) {
@@ -128,6 +146,7 @@ module.exports = {
                         state.rooms[gameid].playerTime = 1
                     }
                 }
+
                 notifyAll({
                     type: 'attempt',
                     players: state.rooms[gameid].parts,
@@ -136,6 +155,11 @@ module.exports = {
                     playerTime: state.rooms[gameid].playerTime,
                     pontuacao: state.rooms[gameid].pontuacao
                 })
+
+                if( state.rooms[gameid].bot && state.rooms[gameid].players['bot'] == state.rooms[gameid].playerTime){
+
+                   botAttempt(gameid)
+                }
 
                 return {
                     game,
@@ -148,18 +172,58 @@ module.exports = {
             }
         }
 
+        function botAttempt(gameid){
+            const game = state.rooms[gameid].game
+            const vector = []
+            for(let i=0;i< 3;i++){
+                for(let j=0; j<3; j++){
+                    if(game[i][j] == 1){
+                        vector.push("X")
+                    }else{
+                        if(game[i][j] == 2){
+                            vector.push("O")
+                        }else{
+                            vector.push(0)
+                        }
+                    }
+                }
+            }
+            for(let i=0; i < 9; i++){
+                if(vector[i] == 0){
+                    vector[i] = i
+                }
+            }
+            
+            const index = bot.minimax(vector, (state.rooms[gameid].playerTime == 1)? "X":"O").index
+
+            let position = {}
+            if(index < 3){
+                position = {i: 0, j: index}
+            }else{
+                if ( index < 6){
+                    position = {i: 1, j: index - 3}
+                }
+                else{
+                    position = {i: 2, j: index - 6}
+                }
+            }
+            
+            playAttempt({gameid, playerid:'bot', position})
+        }
+
         function resetGame(command) {
             const gameid = command.gameid
             let matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
-            if (state.rooms[gameid].playerTime == 3) {
+            if (state.rooms[gameid].playerTime == 3 || state.rooms[gameid].bot) {
                 state.rooms[gameid].game = matrix
                 let n = Math.floor(Math.random() * 10)
-                if (n > 5) {
-                    state.rooms[gameid].playerTime = 1
-                } else {
-                    state.rooms[gameid].playerTime = 2
-                }
+
+                    if (n > 5 ) {
+                        state.rooms[gameid].playerTime = 1
+                    } else {
+                        state.rooms[gameid].playerTime = 2
+                    }
             }
 
             notifyAll({
@@ -168,6 +232,10 @@ module.exports = {
                 playerTime: state.rooms[gameid].playerTime,
                 players: state.rooms[gameid].parts
             })
+
+            if(state.rooms[gameid].bot && state.rooms[gameid].players['bot'] == state.rooms[gameid].playerTime){
+                botAttempt(gameid)    
+            }
 
             return {
                 newGame: { game: state.rooms[gameid].game },
@@ -226,6 +294,8 @@ module.exports = {
             }
 
         }
+
+        
 
         return {
             addNewPlayer,

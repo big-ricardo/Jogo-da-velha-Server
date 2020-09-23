@@ -4,6 +4,7 @@ const router = require('./router')
 const socketio = require('socket.io')
 const cors = require('cors')
 const create = require('./game')
+const minimax = require('./bot')
 
 const app = express()
 const server = http.createServer(app)
@@ -13,6 +14,7 @@ app.use(express.json())
 app.use(cors())
 
 const game = create.world()
+
 
 game.subscribe((command) => {
     console.log(`> Emitting ${command.type}`)
@@ -36,6 +38,11 @@ sockets.on('connection', (socket) => {
     socket.on('disconnect', () => {
         game.removePlayer({ playerid })
         console.log(`> Player disconnected: ${playerid}`)
+    })
+
+    socket.on('add-bot', () => {
+        game.addPlayerInGame({ socketid: 'bot', gameid })
+        console.log(`> bot adicionado: ${gameid}`)
     })
 
     socket.on('move', (command) => {
