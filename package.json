@@ -20,7 +20,7 @@
   "homepage": "https://github.com/Luiss1569/Jogo-da-velha-Server#readme",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "nodemon": "^2.0.4",
     "socket.io": "^2.3.0"
   }
